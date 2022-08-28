@@ -1,0 +1,4 @@
+spring:
+  data:
+    mongodb:
+      uri: "mongodb+srv://ivanbot-log:uYTGjd7GSKDlpmIf@ivanbot.zlq5l.mongodb.net/ivanbot?retryWrites=true&w=majority"
