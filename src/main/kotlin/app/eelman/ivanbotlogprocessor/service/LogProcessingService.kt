@@ -1,7 +1,15 @@
-package app.eelman.ivanbotlogprocessor
+package app.eelman.ivanbotlogprocessor.service
 
+import app.eelman.ivanbotlogprocessor.AllStatsEvent
+import app.eelman.ivanbotlogprocessor.EventId
+import app.eelman.ivanbotlogprocessor.ParsingContext
+import app.eelman.ivanbotlogprocessor.PavlovEvent
+import app.eelman.ivanbotlogprocessor.RoundEndEvent
+import app.eelman.ivanbotlogprocessor.RoundStateEvent
+import app.eelman.ivanbotlogprocessor.config.PavlovConfiguration
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.MapperFeature
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonMapperBuilder
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.ReplaceOptions
@@ -11,22 +19,24 @@ import org.litote.kmongo.div
 import org.litote.kmongo.eq
 import org.springframework.stereotype.Component
 import java.io.File
-import java.text.SimpleDateFormat
 import java.time.Instant
 
 @Component
-class LogProcessingService(coroutineDatabase: CoroutineDatabase) {
+class LogProcessingService(coroutineDatabase: CoroutineDatabase,private val pavlovConfiguration: PavlovConfiguration) {
 
     private val eventCollection = coroutineDatabase.getCollection<PavlovEvent>("pavlov-event").apply {
         runBlocking {
             ensureIndex(
-                AllStatsContainer::mapLabel,
-                AllStatsContainer::gameMode,
+                AllStatsEvent::mapLabel,
+                AllStatsEvent::gameMode,
                 indexOptions = IndexOptions().sparse(true)
             )
         }
     }
-    private val objectMapper = jacksonObjectMapper().configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+    private val objectMapper = jacksonMapperBuilder()
+        .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .build()
     final val job: Job
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
@@ -40,7 +50,7 @@ class LogProcessingService(coroutineDatabase: CoroutineDatabase) {
     suspend fun handleProcessingOfLogs() {
         val last = eventCollection.find().descendingSort(PavlovEvent::_id / EventId::date).limit(1).first()
         val parseContext = ParsingContext(last)
-        File("/pavlovlogs.log").inputStream().bufferedReader().use {
+        File(pavlovConfiguration.logPath).inputStream().bufferedReader().use {
             while (true) {
                 val line = it.readLine()
                 if (line == null) {
@@ -59,8 +69,10 @@ class LogProcessingService(coroutineDatabase: CoroutineDatabase) {
     private fun handleEvent(buffer: StringBuffer, eventDate: Instant, counter: Int) {
         val event = objectMapper.readValue<PavlovEvent>(buffer.toString()).apply {
             this._id = EventId(eventDate, counter)
+        }.apply {
+            (this as? AllStatsEvent)?.let { it.gameMode = it.gameMode.trim() }
         }
-        if (event !is RoundStateContainer && event !is RoundEndContainer) {
+        if (event !is RoundStateEvent && event !is RoundEndEvent) {
             runBlocking {
                 eventCollection.replaceOne(
                     PavlovEvent::_id eq EventId(eventDate, counter),

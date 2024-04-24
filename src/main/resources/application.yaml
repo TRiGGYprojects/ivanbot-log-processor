@@ -3,3 +3,6 @@ spring:
     mongodb:
       uri: ${MONGODB_URI}
 
+
+pavlov:
+  log-path: ${PAVLOV_LOG_PATH}

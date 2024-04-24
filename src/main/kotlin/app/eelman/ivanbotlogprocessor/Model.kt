@@ -6,12 +6,12 @@ import java.time.Instant
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
 @JsonSubTypes(
-    JsonSubTypes.Type(AllStatsContainer::class, name = "allstats"),
-    JsonSubTypes.Type(RoundEndContainer::class, name = "roundend"),
-    JsonSubTypes.Type(BomDataContainer::class, name = "bombdata"),
-    JsonSubTypes.Type(RoundStateContainer::class, name = "roundstate"),
-    JsonSubTypes.Type(KillDataContainer::class, name = "killdata"),
-    JsonSubTypes.Type(SwitchTeamContainer::class, name = "switchteam"),
+    JsonSubTypes.Type(AllStatsEvent::class, name = "allstats"),
+    JsonSubTypes.Type(RoundEndEvent::class, name = "roundend"),
+    JsonSubTypes.Type(BomDataEvent::class, name = "bombdata"),
+    JsonSubTypes.Type(RoundStateEvent::class, name = "roundstate"),
+    JsonSubTypes.Type(KillDataEvent::class, name = "killdata"),
+    JsonSubTypes.Type(SwitchTeamEvent::class, name = "switchteam"),
 )
 sealed interface PavlovEvent {
     var _id: EventId?
@@ -20,11 +20,10 @@ sealed interface PavlovEvent {
 data class EventId(val date: Instant, val counter: Int)
 
 
-data class AllStatsContainer(
-
+data class AllStatsEvent(
     val allStats: List<AllStats>,
     val mapLabel: String,
-    val gameMode: String,
+    var gameMode: String,
     val playerCount: Int,
     val team0Score: Int?,
     val team1Score: Int?,
@@ -42,6 +41,7 @@ data class AllStats(
 
     val uniqueId: String,
     val playerName: String,
+    val productId: String,
     val teamId: Int,
     val stats: List<Stats>
 )
@@ -51,13 +51,13 @@ data class RoundEnd(
     val winningTeam: Int
 )
 
-data class RoundEndContainer(
+data class RoundEndEvent(
 
     val roundEnd: RoundEnd,
     override var _id: EventId?,
 ) : PavlovEvent
 
-data class BomDataContainer(
+data class BomDataEvent(
     val bombData: BombData,
     override var _id: EventId?,
 ) : PavlovEvent
@@ -67,7 +67,7 @@ data class BombData(
     val bombInteraction: String
 )
 
-data class RoundStateContainer(
+data class RoundStateEvent(
     val roundState: RoundState,
     override var _id: EventId?,
 ) : PavlovEvent
@@ -77,7 +77,7 @@ data class RoundState(
     val timestamp: String
 )
 
-data class KillDataContainer(
+data class KillDataEvent(
     val killData: KillData,
     override var _id: EventId?,
 ) : PavlovEvent
@@ -91,7 +91,7 @@ data class KillData(
     val headshot: Boolean
 )
 
-data class SwitchTeamContainer(
+data class SwitchTeamEvent(
 
     val switchTeam: SwitchTeam,
     override var _id: EventId?,
