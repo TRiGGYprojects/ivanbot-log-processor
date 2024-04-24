@@ -42,6 +42,10 @@ jobs:
           if git ls-remote --tags origin latest | grep latest >/dev/null 2>&1; then
             git push origin :refs/tags/latest
           fi
+      - name: Set up Git identity
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
 
       - name: Create or Update tag 'latest'
         run: |
