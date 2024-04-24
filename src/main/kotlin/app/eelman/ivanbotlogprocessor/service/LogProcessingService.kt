@@ -24,15 +24,8 @@ import java.time.Instant
 @Component
 class LogProcessingService(coroutineDatabase: CoroutineDatabase,private val pavlovConfiguration: PavlovConfiguration) {
 
-    private val eventCollection = coroutineDatabase.getCollection<PavlovEvent>("pavlov-event").apply {
-        runBlocking {
-            ensureIndex(
-                AllStatsEvent::mapLabel,
-                AllStatsEvent::gameMode,
-                indexOptions = IndexOptions().sparse(true)
-            )
-        }
-    }
+    private val eventCollection = coroutineDatabase.getCollection<PavlovEvent>("pavlov-event")
+
     private val objectMapper = jacksonMapperBuilder()
         .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)

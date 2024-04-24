@@ -1,10 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinversion = "1.7.10"
+    val kotlinversion = "1.9.23"
     id("org.jetbrains.kotlin.plugin.spring") version kotlinversion
-    kotlin("jvm") version "1.7.10"
-    id("org.springframework.boot") version "2.6.4"
+    kotlin("jvm") version kotlinversion
+    id("org.springframework.boot") version "3.2.5"
     kotlin("kapt") version kotlinversion
 }
 
@@ -14,9 +14,9 @@ version = "1.0.0"
 repositories {
     mavenCentral()
 }
-val kmongoVersion = "4.7.0"
+val kmongoVersion = "4.9.0"
 val kotlinVersion = "kotlinVersion"
-val springversion = "2.7.3"
+val springversion = "3.2.5"
 
 dependencies {
     implementation("org.litote.kmongo:kmongo-jackson-mapping:${kmongoVersion}")
@@ -31,7 +31,7 @@ tasks.test {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions.jvmTarget = "17"
 }
 
 tasks.bootJar {
