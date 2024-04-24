@@ -36,8 +36,12 @@ jobs:
 
       - name: Delete old tag
         run: |
-          git tag -d latest
-          git push origin :refs/tags/latest || true
+          if git rev-parse --verify latest >/dev/null 2>&1; then
+            git tag -d latest
+          fi
+          if git ls-remote --tags origin latest | grep latest >/dev/null 2>&1; then
+            git push origin :refs/tags/latest
+          fi
 
       - name: Create or Update tag 'latest'
         run: |
