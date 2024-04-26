@@ -12,6 +12,7 @@ import java.time.Instant
     JsonSubTypes.Type(RoundStateEvent::class, name = "roundstate"),
     JsonSubTypes.Type(KillDataEvent::class, name = "killdata"),
     JsonSubTypes.Type(SwitchTeamEvent::class, name = "switchteam"),
+    JsonSubTypes.Type(ResetSNDEvent::class, name = "resetsnd"),
 )
 sealed interface PavlovEvent {
     var _id: EventId?
@@ -19,6 +20,7 @@ sealed interface PavlovEvent {
 
 data class EventId(val date: Instant, val counter: Int)
 
+data class ResetSNDEvent(override var _id: EventId?, val resetSND: Boolean) : PavlovEvent
 
 data class AllStatsEvent(
     val allStats: List<AllStats>,
@@ -41,8 +43,8 @@ data class AllStats(
 
     val uniqueId: String,
     val playerName: String,
-    val productId: String,
-    val teamId: Int,
+    val productId: String?,
+    val teamId: Int?,
     val stats: List<Stats>
 )
 

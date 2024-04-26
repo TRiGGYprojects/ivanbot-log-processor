@@ -5,7 +5,7 @@ import java.time.Instant
 
 class ParsingContext(private val event: PavlovEvent?) {
     private val dateRegex = Regex("^\\[([\\d.\\-:]+)]\\[\\d+]StatManagerLog:(.*)")
-
+    private val resetSndMatch = Regex("^\\[([\\d+.:-]+]).+ ResetSND")
     private val dateformat = SimpleDateFormat("yyyy.MM.dd-HH.mm.ss:SSS")
     private var counter = 0
     private var lastTimeStamp: Instant? = null
@@ -17,7 +17,18 @@ class ParsingContext(private val event: PavlovEvent?) {
 
     fun handleNewLine(line: String): Triple<StringBuffer, Instant, Int>? {
         val match = dateRegex.matchEntire(line)
+        val rconMatch = resetSndMatch.matchEntire(line)
         when {
+            rconMatch != null -> {
+                if (eventDate == lastTimeStamp) {
+                    counter++
+                } else {
+                    lastTimeStamp = eventDate
+                    counter = 0
+                }
+                return Triple(StringBuffer("""{"resetSND": true}"""),
+                    dateformat.parse(rconMatch.groups[1]?.value).toInstant(),counter)
+            }
             match != null -> {
                 eventDate = dateformat.parse(match.groups[1]?.value).toInstant()
                 if (event == null || eventDate!! > event._id?.date) {
